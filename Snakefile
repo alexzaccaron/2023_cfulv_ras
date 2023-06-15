@@ -8,7 +8,7 @@ FASTAS=["Race4_fs", "Race4_lo", "Race5_fs", "Race5_lo"]
 rule all:
    input:
       expand("output/02proteins/{fasta}.fasta", fasta=FASTAS),
-      expand("output/03match_peptides/{sample}__{fasta}.txt", sample=SAMPLES, fasta=FASTAS)
+      expand("output/04uniq_peptides/{sample}__{fasta}.txt", sample=SAMPLES, fasta=FASTAS)
 
 
 
@@ -36,6 +36,7 @@ rule single_line_fasta:
 
 
 
+##match_peptides: search peptide sequences among transcripts
 rule match_peptides:
    input:
       fasta="output/02proteins/{fasta}.fasta",
@@ -54,6 +55,15 @@ rule match_peptides:
 
 
 
+##uniq_peptides: search for peptides unique to a transcript
+rule uniq_peptides:
+   input:
+      "output/03match_peptides/{sample}__{fasta}.txt"
+   output:
+      "output/04uniq_peptides/{sample}__{fasta}.txt"
+   shell: """
+      tr ',' '\\t' < {input} | awk '{{if(NF==2) print $1"\\t"$2}}' > {output}
+   """
 
 
 
