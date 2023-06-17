@@ -1,0 +1,53 @@
+
+
+FASTAS=["Race4_fs", "Race4_lo", "Race5_fs", "Race5_lo"]
+
+rule all:
+   input:
+      expand("output/03uniq_prots/{fasta}.txt", fasta=FASTAS)
+
+
+
+##cluster_cdhit: use CD-HIT to cluster identical protein sequences
+rule cluster_cdhit:
+   conda: "env.yml"
+   input:
+      "data/{fasta}.fasta"
+   output:
+      "output/01cdhit/{fasta}.clstr"
+   log:
+      "logs/{fasta}.log"
+   shell: """
+      cd-hit -c 1 -T 6 -i {input} -o output/01cdhit/{wildcards.fasta}  > {log} 2>&1
+   """
+
+
+
+##cluster_cdhit2txt: generate a txt output from the output of CD-HIT
+rule cluster_cdhit2txt:
+   conda: "env.yml"
+   input:
+      "output/01cdhit/{fasta}.clstr"
+   output:
+      "output/02clstr2txt/{fasta}.txt"
+   shell: """
+      clstr2txt.pl {input} > {output}
+   """
+
+
+
+##get_uniq_prots: get unique proteins
+rule get_uniq_prots:
+   conda: "env.yml"
+   input:
+      "output/02clstr2txt/{fasta}.txt"
+   output:
+      "output/03uniq_prots/{fasta}.txt"
+   shell: """
+      tail -n+2 {input} | awk '$3 == 1' | cut -f 1  > {output}
+   """
+
+
+
+
+
